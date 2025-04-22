@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Single & Thriving 💔💅</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --text: #333;
+      --primary: #6c757d;
+      --box: #fff;
+      --button: #4caf50;
+    }
+
+    body.dark {
+      --bg: #333;
+      --text: #eee;
+      --box: #444;
+      --button: #9c27b0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background: #e0e0e0;
+      padding: 10px;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      font-weight: bold;
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+
+    .box {
+      background: var(--box);
+      border-left: 4px solid var(--primary);
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 15px;
+      background: var(--button);
+      color: white;
+      border: none;
+      margin-top: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .theme-toggle {
+      float: right;
+      margin-top: -30px;
+    }
+
+    .spinner {
+      font-size: 20px;
+      text-align: center;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body onload="initApp()">
+
+  <header>
+    <h1>💔 Single & Thriving</h1>
+    <div class="theme-toggle">
+      <button onclick="toggleTheme()">🌓</button>
+    </div>
+  </header>
+
+  <nav>
+    <button onclick="navigate('home')">Home</button>
+    <button onclick="navigate('journal')">Journal</button>
+    <button onclick="navigate('goals')">Goals</button>
+    <button onclick="navigate('pep')">Pep Talk</button>
+    <button onclick="navigate('settings')">Settings</button>
+  </nav>
+
+  <div class="container">
+    <!-- LOGIN PAGE -->
+    <div id="login" class="page active">
+      <h2>Login to Your Journey</h2>
+      <input type="password" id="passwordInput" placeholder="Enter your password" />
+      <button onclick="login()">Login</button>
+      <p id="loginError" style="color: red;"></p>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="page">
+      <div class="box">
+        <h2>Welcome, <span id="nameDisplay">you</span> 💖</h2>
+        <p>How are you feeling today?</p>
+        <div>
+          <span onclick="setMood('😊')">😊</span>
+          <span onclick="setMood('😢')">😢</span>
+          <span onclick="setMood('💪')">💪</span>
+          <span onclick="setMood('😌')">😌</span>
+        </div>
+        <p id="dailyMood">Mood: 😊</p>
+      </div>
+    </div>
+
+    <!-- JOURNAL -->
+    <div id="journal" class="page">
+      <div class="box">
+        <h2>📓 Journal</h2>
+        <textarea id="journalEntry" placeholder="Write it all out..."></textarea>
+        <button onclick="saveJournal()">Save Entry</button>
+        <button onclick="downloadJournal()">Download Journal</button>
+        <div id="journalDisplay"></div>
+      </div>
+    </div>
+
+    <!-- GOALS -->
+    <div id="goals" class="page">
+      <div class="box">
+        <h2>💪 Glow-Up Goals</h2>
+        <textarea id="goalText" placeholder="Skincare, fitness, reading... your glow-up checklist!"></textarea>
+        <button onclick="saveGoals()">Save Goals</button>
+        <button onclick="downloadGoals()">Download Goals</button>
+      </div>
+    </div>
+
+    <!-- PEP TALK -->
+    <div id="pep" class="page">
+      <div class="box">
+        <h2>💬 Pep Talk Generator</h2>
+        <button onclick="generatePepTalk()">Give me a boost</button>
+        <p id="pepTalk"></p>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="page">
+      <div class="box">
+        <h2>⚙️ Settings</h2>
+        <input type="text" id="userName" placeholder="Enter your name">
+        <button onclick="saveName()">Save Name</button><br><br>
+        <button onclick="clearData()">🧹 Clear All Data</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let loggedIn = false;
+    const defaultPassword = '12345';  // Change for real use
+
+    function initApp() {
+      if (!localStorage.getItem("password")) {
+        localStorage.setItem("password", defaultPassword);
+      }
+
+      document.body.classList.toggle('dark', localStorage.getItem("theme") === "dark");
+      document.getElementById("journalEntry").value = localStorage.getItem("journalDraft") || '';
+      document.getElementById("goalText").value = localStorage.getItem("goals") || '';
+      document.getElementById("nameDisplay").innerText = localStorage.getItem("name") || "you";
+      document.getElementById("dailyMood").innerText = "Mood: " + (localStorage.getItem("mood") || "😊");
+      displayJournal();
+    }
+
+    function navigate(pageId) {
+      if (!loggedIn && pageId !== 'login') {
+        alert("You must log in first!");
+        return;
+      }
+
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById(pageId).classList.add("active");
+    }
+
+    function login() {
+      const password = document.getElementById("passwordInput").value;
+      if (password === localStorage.getItem("password")) {
+        loggedIn = true;
+        navigate('home');
+      } else {
+        document.getElementById("loginError").innerText = "Incorrect password!";
+      }
+    }
+
+    function setMood(mood) {
+      localStorage.setItem("mood", mood);
+      document.getElementById("dailyMood").innerText = "Mood: " + mood;
+    }
+
+    function saveJournal() {
+      const text = document.getElementById("journalEntry").value;
+      const date = new Date().toLocaleString();
+      let entries = JSON.parse(localStorage.getItem("entries") || '[]');
+      entries.unshift({ text, date });
+      localStorage.setItem("entries", JSON.stringify(entries));
+      localStorage.setItem("journalDraft", "");
+      document.getElementById("journalEntry").value = "";
+      displayJournal();
+    }
+
+    function displayJournal() {
+      let entries = JSON.parse(localStorage.getItem("entries") || '[]');
+      let html = entries.map(e => `<div class="box"><strong>${e.date}</strong><br>${e.text}</div>`).join("");
+      document.getElementById("journalDisplay").innerHTML = html;
+    }
+
+    document.getElementById("journalEntry").addEventListener("input", e => {
+      localStorage.setItem("journalDraft", e.target.value);
+    });
+
+    function saveGoals() {
+      const goals = document.getElementById("goalText").value;
+      localStorage.setItem("goals", goals);
+      alert("Goals saved!");
+    }
+
+    function generatePepTalk() {
+      const pepTalks = [
+        "You're the prize. Never forget it.",
+        "You didn’t lose them. You found yourself.",
+        "Single isn't lonely. It's freedom with potential.",
+        "You’re growing through what you’re going through.",
+        "They were a season. You’re a lifetime."
+      ];
+      const quote = pepTalks[Math.floor(Math.random() * pepTalks.length)];
+      document.getElementById("pepTalk").innerText = "💖 " + quote;
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function saveName() {
+      const name = document.getElementById("userName").value;
+      localStorage.setItem("name", name);
+      document.getElementById("nameDisplay").innerText = name;
+    }
+
+    function clearData() {
+      if (confirm("Clear all saved data?")) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+
+    function downloadJournal() {
+      const entries = JSON.parse(localStorage.getItem("entries") || '[]');
+      const journalText = entries.map(e => `${e.date}\n${e.text}`).join("\n\n");
+      const blob = new Blob([journalText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'journal.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadGoals() {
+      const goals = localStorage.getItem("goals") || "";
+      const blob = new Blob([goals], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'goals.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
